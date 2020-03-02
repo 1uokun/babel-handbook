@@ -10,19 +10,19 @@
 
   * [介绍](#toc-introduction)
   * [安装 Babel](#toc-setting-up-babel) 
-      * [`babel-cli`](#toc-babel-cli)
+      * [`@babel/cli`](#toc-babel-cli)
       * [在项目内运行 Babel CLI](#toc-running-babel-cli-from-within-a-project)
-      * [`babel-register`](#toc-babel-register)
-      * [`babel-node`](#toc-babel-node)
-      * [`babel-core`](#toc-babel-core)
+      * [`@babel/register`](#toc-babel-register)
+      * [`@babel/node`](#toc-babel-node)
+      * [`@babel/core`](#toc-babel-core)
   * [配置 Babel](#toc-configuring-babel) 
-      * [`.babelrc`](#toc-babelrc)
-      * [`babel-preset-es2015`](#toc-babel-preset-es2015)
-      * [`babel-preset-react`](#toc-babel-preset-react)
-      * [`babel-preset-stage-x`](#toc-babel-preset-stage-x)
+      * [`babel.config.js`](#toc-babelrc)
+      * [`@babel/preset-env`](#toc-babel-preset-env)
+      * [`@babel/preset-react`](#toc-babel-preset-react)
+      * <del>[`babel-preset-stage-x`](#toc-babel-preset-stage-x)</del>
   * [执行 Babel 生成的代码](#toc-executing-babel-generated-code) 
-      * [`babel-polyfill`](#toc-babel-polyfill)
-      * [`babel-runtime`](#toc-babel-runtime)
+      * [`@babel/polyfill`](#toc-babel-polyfill)
+      * [`@babel/runtime`](#toc-babel-runtime)
   * [配置 Babel（进阶）](#toc-configuring-babel-advanced) 
       * [手动指定插件](#toc-manually-specifying-plugins)
       * [插件选项](#toc-plugin-options)
@@ -89,9 +89,10 @@ const square = function square(n) {
 Babel 的 CLI 是一种在命令行下使用 Babel 编译文件的简单方法。
 
 让我们先全局安装它来学习基础知识。
+在使用7.0版本的@babel/cli之前必须同时安装好`@babel/core`。
 
 ```sh
-$ npm install --global babel-cli
+$ npm install --global @babel/cli @babel/core
 ```
 
 我们可以这样来编译我们的第一个文件：
@@ -128,13 +129,13 @@ $ babel src -d lib
 要在（项目）本地安装 Babel CLI 可以运行：
 
 ```sh
-$ npm install --save-dev babel-cli
+$ npm install --save-dev @babel/cli @babel/core
 ```
 
 > **注意：**因为全局运行 Babel 通常不是什么好习惯所以如果你想要卸载全局安装的 Babel 的话，可以运行：
-> 
-> ```sh
-$ npm uninstall --global babel-cli
+
+```sh
+$ npm uninstall --global @babel/cli @babel/core
 ```
 
 安装完成后，你的 `package.json` 应该如下所示：
@@ -144,7 +145,8 @@ $ npm uninstall --global babel-cli
   "name": "my-project",
   "version": "1.0.0",
   "devDependencies": {
-    "babel-cli": "^6.0.0"
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0"
   }
 }
 ```
@@ -161,7 +163,8 @@ $ npm uninstall --global babel-cli
 +     "build": "babel src -d lib"
 +   },
     "devDependencies": {
-      "babel-cli": "^6.0.0"
+      "@babel/cli": "^7.0.0",
+      "@babel/core": "^7.0.0"
     }
   }
 ```
@@ -174,9 +177,9 @@ npm run build
 
 这将以与之前同样的方式运行 Babel，但这一次我们使用的是本地副本。
 
-## <a id="toc-babel-register"></a>`babel-register`
+## <a id="toc-babel-register"></a>`@babel/register`
 
-下一个常用的运行 Babel 的方法是通过 `babel-register`。这种方法只需要引入文件就可以运行 Babel，或许能更好地融入你的项目设置。
+下一个常用的运行 Babel 的方法是通过 `@babel/register`。这种方法只需要引入文件就可以运行 Babel，或许能更好地融入你的项目设置。
 
 但请注意这种方法并不适合正式产品环境使用。 直接部署用此方式编译的代码不是好的做法。 在部署之前预先编译会更好。 不过用在构建脚本或是其他本地运行的脚本中是非常合适的。
 
@@ -186,18 +189,18 @@ npm run build
 console.log("Hello world!");
 ```
 
-如果我们用 `node index.js` 来运行它是不会使用 Babel 来编译的。所以我们需要设置 `babel-register`。.
+如果我们用 `node index.js` 来运行它是不会使用 Babel 来编译的。所以我们需要设置 `@babel/register`。.
 
-首先安装 `babel-register`。.
+首先安装 `@babel/register`。.
 
 ```sh
-$ npm install --save-dev babel-register
+$ npm install --save-dev @babel/register
 ```
 
 接着，在项目中创建 `register.js` 文件并添加如下代码：
 
 ```js
-require("babel-register");
+require("@babel/register");
 require("./index.js");
 ```
 
@@ -210,23 +213,23 @@ $ node register.js
 ```
 
 > **注意：**你不能在你要编译的文件内同时注册 Babel，因为 node 会在 Babel 编译它之前就将它执行了。
-> 
-> ```js
-require("babel-register");
+
+```js
+require("@babel/register");
 // 未编译的：
 console.log("Hello world!");
 ```
 
-## <a id="toc-babel-node"></a>`babel-node`
+## <a id="toc-babel-node"></a>`@babel/node`
 
 如果你要用 `node` CLI 来运行代码，那么整合 Babel 最简单的方式就是使用 `babel-node` CLI，它是 `node` CLI 的替代品。
 
 但请注意这种方法并不适合正式产品环境使用。 直接部署用此方式编译的代码不是好的做法。 在部署之前预先编译会更好。 不过用在构建脚本或是其他本地运行的脚本中是非常合适的。
 
-首先确保 `babel-cli` 已经安装了。
+首先确保 `@babel/cli`和`@babel/core` 都已经安装了。
 
 ```sh
-$ npm install --save-dev babel-cli
+$ npm install --save-dev @babel/cli @babel/core
 ```
 
 > **注意:** 如果您想知道我们为什么要在本地安装，请阅读 上面[在项目内运行Babel CLI](#toc-running-babel-cli-from-within-a-project)的部分。
@@ -253,18 +256,18 @@ $ npm install --save-dev babel-cli
 
 > 提示：你可以使用 [`npm-run`](https://www.npmjs.com/package/npm-run)。.
 
-## <a id="toc-babel-core"></a>`babel-core`
+## <a id="toc-babel-core"></a>`@babel/core`
 
-如果你需要以编程的方式来使用 Babel，可以使用 `babel-core` 这个包。
+如果你需要以编程的方式来使用 Babel，可以使用 `@babel/core` 这个包。
 
-首先安装 `babel-core`。.
+首先安装 `@babel/core`。.
 
 ```sh
-$ npm install babel-core
+$ npm install --save-dev @babel/core
 ```
 
 ```js
-var babel = require("babel-core");
+var babel = require("@babel/core");
 ```
 
 字符串形式的 JavaScript 代码可以直接使用 `babel.transform` 来编译。.
@@ -310,12 +313,12 @@ babel.transformFromAst(ast, code, options);
 
 你可以通过安装**插件（plugins）**或**预设（presets，也就是一组插件）**来指示 Babel 去做什么事情。
 
-## <a id="toc-babelrc"></a>`.babelrc`
+## <a id="toc-babelrc"></a>`babel.config.js`
 
-在我们告诉 Babel 该做什么之前，我们需要创建一个配置文件。你需要做的就是在项目的根路径下创建 `.babelrc` 文件。然后输入以下内容作为开始：
+在我们告诉 Babel 该做什么之前，我们需要创建一个配置文件。你需要做的就是在项目的根路径下创建 `babel.config.js`（7.0版本新增的`babel.config.js`会影响老版本的`.babelrc`） 文件。然后输入以下内容作为开始：
 
 ```js
-{
+module.exports = {
   "presets": [],
   "plugins": []
 }
@@ -323,44 +326,45 @@ babel.transformFromAst(ast, code, options);
 
 这个文件就是用来让 Babel 做你要它做的事情的配置文件。
 
-> **注意：**尽管你也可以用其他方式给 Babel 传递选项，但 `.babelrc` 文件是约定也是最好的方式。
+> **注意：**尽管你也可以用其他方式给 Babel 传递选项，但 `babel.config.js` 文件是约定也是最好的方式。
 
-## <a id="toc-babel-preset-es2015"></a>`babel-preset-es2015`
+## <a id="toc-babel-preset-env"></a>`@babel/preset-env`
 
-我们先从让 Babel 把 ES2015（最新版本的 JavaScript 标准，也叫做 ES6）编译成 ES5（现今在大多数 JavaScript 环境下可用的版本）开始吧。
+`@babel/preset-env`是一个智能预设，可让您使用最新的JavaScript，而无需**微观**管理目标环境所需的语法转换（以及可选的浏览器polyfill）。
+相当于之前的版本，在使用`babel-preset-es2015`把 ES2015（最新版本的 JavaScript 标准，也叫做 ES6）编译成 ES5（现今在大多数 JavaScript 环境下可用的版本）时，还需要额外的许多配置`stage-0,stage-1`来应对TC39不同的提案。
 
-我们需要安装 "es2015" Babel 预设：
+我们需要安装 "@babel/preset-env" Babel 预设：
 
 ```sh
-$ npm install --save-dev babel-preset-es2015
+$ npm install --save-dev @babel/preset-env
 ```
 
-我们修改 `.babelrc` 来包含这个预设。
+我们修改 `babel.config.js` 来包含这个预设。
 
 ```diff
-  {
+  module.exports = {
     "presets": [
-+     "es2015"
++     "@babel/preset-env"
     ],
     "plugins": []
   }
 ```
 
-## <a id="toc-babel-preset-react"></a>`babel-preset-react`
+## <a id="toc-babel-preset-react"></a>`@babel/preset-react`
 
 设置 React 一样容易。只需要安装这个预设：
 
 ```sh
-$ npm install --save-dev babel-preset-react
+$ npm install --save-dev @babel/preset-react
 ```
 
-然后在 `.babelrc` 文件里补充：
+然后在 `babel.config.js` 文件里补充：
 
 ```diff
-  {
+  module.exports = {
     "presets": [
-      "es2015",
-+     "react"
+      "@babel/preset-env",
++     "@babel/preset-react"
     ],
     "plugins": []
   }
@@ -368,39 +372,7 @@ $ npm install --save-dev babel-preset-react
 
 ## <a id="toc-babel-preset-stage-x"></a>`babel-preset-stage-x`
 
-JavaScript 还有一些提案，正在积极通过 TC39（ECMAScript 标准背后的技术委员会）的流程成为标准的一部分。
-
-这个流程分为 5（0－4）个阶段。 随着提案得到越多的关注就越有可能被标准采纳，于是他们就继续通过各个阶段，最终在阶段 4 被标准正式采纳。
-
-以下是4 个不同阶段的（打包的）预设：
-
-  * `babel-preset-stage-0`
-  * `babel-preset-stage-1`
-  * `babel-preset-stage-2`
-  * `babel-preset-stage-3`
-
-> 注意 stage-4 预设是不存在的因为它就是上面的 `es2015` 预设。
-
-以上每种预设都依赖于紧随的后期阶段预设。例如，`babel-preset-stage-1` 依赖 `babel-preset-stage-2`，后者又依赖 `babel-preset-stage-3`。.
-
-使用的时候只需要安装你想要的阶段就可以了：
-
-```sh
-$ npm install --save-dev babel-preset-stage-2
-```
-
-然后添加进你的 `.babelrc` 配置文件。
-
-```diff
-  {
-    "presets": [
-      "es2015",
-      "react",
-+     "stage-2"
-    ],
-    "plugins": []
-  }
-```
+在Babel 7.0中将不需要再额外配置
 
 * * *
 
@@ -408,7 +380,7 @@ $ npm install --save-dev babel-preset-stage-2
 
 即便你已经用 Babel 编译了你的代码，但这还不算完。
 
-## <a id="toc-babel-polyfill"></a>`babel-polyfill`
+## <a id="toc-babel-polyfill"></a>`@babel/polyfill`
 
 Babel 几乎可以编译所有时新的 JavaScript 语法，但对于 APIs 来说却并非如此。
 
@@ -442,35 +414,34 @@ Babel 用了优秀的 [core-js](https://github.com/zloirock/core-js) 用作 poly
 要使用 Babel polyfill，首先用 npm 安装它：
 
 ```sh
-$ npm install --save babel-polyfill
+$ npm install --save @babel/polyfill
 ```
 
 然后只需要在文件顶部导入 polyfill 就可以了：
 
 ```js
-import "babel-polyfill";
+import "@babel/polyfill";
 ```
 
-## <a id="toc-babel-runtime"></a>`babel-runtime`
+## <a id="toc-babel-runtime"></a>`@babel/runtime`
 
 为了实现 ECMAScript 规范的细节，Babel 会使用“助手”方法来保持生成代码的整洁。
 
 由于这些助手方法可能会特别长并且会被添加到每一个文件的顶部，因此你可以把它们统一移动到一个单一的“运行时（runtime）”中去。
 
-通过安装 `babel-plugin-transform-runtime` 和 `babel-runtime` 来开始。
+通过安装 `@babel/plugin-transform-runtime` 和 `@babel/runtime` 来开始。
 
 ```sh
-$ npm install --save-dev babel-plugin-transform-runtime
-$ npm install --save babel-runtime
+$ npm install --save-dev @babel/plugin-transform-runtime
+$ npm install --save @babel/runtime
 ```
 
-然后更新 `.babelrc`：
+然后更新 `babel.config.js`：
 
 ```diff
-  {
+  module.exports = {
     "plugins": [
-+     "transform-runtime",
-      "transform-es2015-classes"
++     "@babel/plugin-transform-runtime"
     ]
   }
 ```
@@ -486,24 +457,28 @@ class Foo {
 编译成：
 
 ```js
-import _classCallCheck from "babel-runtime/helpers/classCallCheck";
-import _createClass from "babel-runtime/helpers/createClass";
+"use strict";
 
-let Foo = function () {
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
+
+var _createClass2 = _interopRequireDefault(require("@babel/runtime/helpers/createClass"));
+
+var Foo = /*#__PURE__*/function () {
   function Foo() {
-    _classCallCheck(this, Foo);
+    (0, _classCallCheck2["default"])(this, Foo);
   }
 
-  _createClass(Foo, [{
+  (0, _createClass2["default"])(Foo, [{
     key: "method",
     value: function method() {}
   }]);
-
   return Foo;
 }();
 ```
 
-这样就不需要把 `_classCallCheck` 和 `_createClass` 这两个助手方法放进每一个需要的文件里去了。
+这样就不需要把 `_classCallCheck2` 和 `_createClass2` 这两个助手方法放进每一个需要的文件里去了。
 
 * * *
 
@@ -515,18 +490,18 @@ let Foo = function () {
 
 Babel 预设就是一些预先配置好的插件的集合，如果你想要做一些不一样的事情你会手动去设定插件，这和使用预设几乎完全相同。
 
-首先安装插件：
+首先安装插件（7.0命名规范用`proposal`替代了`transform`）：
 
 ```sh
-$ npm install --save-dev babel-plugin-transform-es2015-classes
+$ npm install --save-dev @babel/plugin-proposal-class-properties
 ```
 
-然后往 `.babelrc` 文件添加 `plugins` 字段。.
+然后往 `babel.config.js` 文件添加 `plugins` 字段。.
 
 ```diff
-  {
+  module.exports = {
 +   "plugins": [
-+     "transform-es2015-classes"
++     "@babel/plugin-proposal-class-properties"
 +   ]
   }
 ```
@@ -544,10 +519,10 @@ $ npm install --save-dev babel-plugin-transform-es2015-classes
 要为插件添加选项，只需要做出以下更改：
 
 ```diff
-  {
+  module.exports = {
     "plugins": [
--     "transform-es2015-classes"
-+     ["transform-es2015-classes", { "loose": true }]
+-     "@babel/plugin-proposal-class-properties"
++     ["@babel/plugin-proposal-class-properties", { "loose": true }]
     ]
   }
 ```
@@ -562,7 +537,7 @@ Babel 插件解决许多不同的问题。 其中大多数是开发工具，可�
 
 ```diff
   {
-    "presets": ["es2015"],
+    "presets": ["@babel/preset-env"],
     "plugins": [],
 +   "env": {
 +     "development": {
@@ -596,6 +571,28 @@ $ [COMMAND]
 > **注意：**`[COMMAND]` 指的是任意一个用来运行 Babel 的命令（如：`babel`，`babel-node`，或是 `node`，如果你使用了 register 钩子的话）。
 > 
 > **提示：**如果你想要让命令能够跨 unix 和 windows 平台运行的话，可以使用 [`cross-env`](https://www.npmjs.com/package/cross-env)。.
+
+### JavaScript configuration files
+
+还可以使用JavaScript来编写`babel.config.js`作为配置文件
+```js
+  const presets = [ ... ];
+  const plugins = [ ... ];
+
+  module.exports = { presets, plugins };
+```
+允许您访问任何Node.js API，例如基于流程环境(process environment)的动态配置：
+
+```diff
+  const presets = [ ... ];
+  const plugins = [ ... ];
+
++  if (process.env["ENV"] === "prod") {
++    plugins.push(...);
++  }
+
+  module.exports = { presets, plugins };
+```
 
 ## <a id="toc-making-your-own-preset"></a>制作你自己的预设（preset）
 
